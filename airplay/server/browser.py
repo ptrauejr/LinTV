@@ -2,14 +2,19 @@ import select
 import socket
 import sys
 import pybonjour
+from airplay.protocol import Protocol
+from airplay.server.node import Node
+from airplay.protocol import Protocol
 
 
-class browser:
+class Browser:
     timeout  = 5
     queried  = []
     resolved = []
+    servers = {}
     
-    
+    # Helper method to parse out the TXT Records returned since these aren't in
+    # a real python data structure when returned by pybonjour
     def parse_txt_record(txtRecord):
         parsedRecord = {}
     
@@ -28,6 +33,7 @@ class browser:
         return parsedRecord
     
     
+    # Callback that performs the dns lookup on the hostname
     def query_record_callback(sdRef, flags, interfaceIndex, errorCode, fullname,
                               rrtype, rrclass, rdata, ttl):
         if errorCode == pybonjour.kDNSServiceErr_NoError:
@@ -35,6 +41,8 @@ class browser:
             queried.append(True)
     
     
+    # Callback that performs the initial lookup to get a list of targets
+    # matching the type
     def resolve_callback(sdRef, flags, interfaceIndex, errorCode, fullname,
                          hosttarget, port, txtRecord):
         if errorCode != pybonjour.kDNSServiceErr_NoError:
@@ -47,6 +55,9 @@ class browser:
     
         pairs = parse_txt_record(txtRecord)
         print '  txtRecord  =', pairs
+
+        server = Node(fullname, hosttarget, port, pairs)
+        servers[fullname] = server
     
         query_sdRef = \
                 pybonjour.DNSServiceQueryRecord(interfaceIndex = interfaceIndex,
@@ -70,7 +81,7 @@ class browser:
         resolved.append(True)
     
     
-    def browse_callback(sdRef, flags, interfaceIndex, errorCode, serviceName,
+    def browse_callback(flags, interfaceIndex, errorCode, serviceName,
                         regtype, replyDomain):
         if errorCode != pybonjour.kDNSServiceErr_NoError:
             return
@@ -101,7 +112,8 @@ class browser:
             resolve_sdRef.close()
     
     
-    def queryService(self, regtype):
+    def browse(self):
+        regtype = Protocol.SEARCH
         browse_sdRef = pybonjour.DNSServiceBrowse(regtype = regtype,
                                                   callBack = browse_callback)
         
@@ -116,5 +128,4 @@ class browser:
         finally:
             browse_sdRef.close()
     
-    def browse(self):
 
