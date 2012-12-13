@@ -6,11 +6,10 @@ class Node:
     def __init__(self, name, domain, port, info):
         self.name = name
         self.domain = domain
-        self.ip = ip
         self.port = port
         self.deviceid = info['deviceid']
         self.srcvers = info['srcvers']
-        self.model = info['mode']
+        self.model = info['model']
 
     def setIP(self, ip):
         self.ip = ip
