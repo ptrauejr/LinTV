@@ -2,7 +2,7 @@ import select
 import socket
 import sys
 import pybonjour
-from airplay.protocol import Protocol
+from ..protocol import Protocol
 from airplay.server.node import Node
 from airplay.protocol import Protocol
 
